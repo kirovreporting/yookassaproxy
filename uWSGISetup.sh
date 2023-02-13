@@ -36,7 +36,7 @@ pip install -q yookassa 1> /dev/null
 
 echo "downloading project from git..."
 cd /root
-wget 'https://github.com/kirovreporting/'${projectName}'/archive/refs/heads/main.zip' 1> /dev/null
+wget -q 'https://github.com/kirovreporting/'${projectName}'/archive/refs/heads/main.zip' 1> /dev/null
 unzip main.zip 1> /dev/null
 mv ${projectName}-main ${projectName}
 cd ${projectName}
