@@ -7,12 +7,16 @@ fi
 
 projectName="yookassaproxy"
 
-read -p "Enter domain name for your proxy (like this: my.proxydomain.com): " domainName
-read -p "Enter email for certbot notifications: " certbotMail
+read -p "Do you have reverse-proxy? y/n: " hasReverseProxy
 read -p "Enter yookassa account ID: " yookassaAccountID
 read -p "Enter yookassa secret key: " yookassaSecretKey
 read -p "Enter connection token: " connectionToken
-read -p "Do you have reverse-proxy? y/n: " hasReverseProxy
+
+if [[ ${hasReverseProxy} == "n" ]] 
+then
+read -p "Enter domain name for your proxy (like this: my.proxydomain.com): " domainName
+read -p "Enter email for certbot notifications: " certbotMail
+fi
 
 echo "installing binaries for unzipping, python and uWSGI..."
 apt -yq update
@@ -27,7 +31,7 @@ cd ${projectName}
 
 ################# UWSGI.INI #################
 
-if [[ ${hasReverseProxy} == "y" ]]
+if [[ ${hasReverseProxy} == "n" ]]
 then
 
 echo "creating uWSGI config file..."
@@ -38,8 +42,8 @@ module = wsgi:app
 master = true
 processes = 5
 wsgi-file = /root/${projectName}/${projectName}.py
-http-socket = 127.0.0.1:3030
-stats = 127.0.0.1:3131
+socket = /tmp/${projectName}.sock
+chmod-socket = 660
 vacuum = true
 
 die-on-term = true
@@ -55,8 +59,8 @@ module = wsgi:app
 master = true
 processes = 5
 wsgi-file = /root/${projectName}/${projectName}.py
-socket = /tmp/${projectName}.sock
-chmod-socket = 660
+http-socket = 127.0.0.1:3030
+stats = 127.0.0.1:3131
 vacuum = true
 
 die-on-term = true
@@ -100,7 +104,7 @@ systemctl enable uwsgi
 
 #################  NGINX INSTALL #################
 
-if [[ ${hasReverseProxy} == "y" ]]
+if [[ ${hasReverseProxy} == "n" ]]
 then
 
 echo "installing nginx..."
