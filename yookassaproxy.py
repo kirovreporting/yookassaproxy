@@ -92,10 +92,8 @@ def paymentCheck():
     paymentID = request.args.get('orderId')
     try:
         payment = Payment.find_one(paymentID)
-    except yookassa.domain.exceptions.not_found_error.NotFoundError as e:
-        return '{"status":"error","result":{"orderStatus":"not found"}}'
     except:
-        return '{"status":"error"}'
+        return '{"status":"error","result":{"orderStatus":"not found"}}'
     print(payment.status)
     if payment.paid :
         return '{"status":"ok","result":{"orderStatus":"succeeded"}}'

@@ -23,17 +23,21 @@ read -p "Which port do you want uWSGI to listen to: " listenPort
 read -p "Which port do you want uWSGI to show stats: " statsPort
 fi
 
+echo "updating repos..."
+apt -yqq update 1> /dev/null
 echo "installing binaries for unzipping, python and uWSGI..."
-apt -yqq update
-apt -yqq install wget unzip build-essential python3-dev python3-pip 
-pip install -q flask
-pip install -q uwsgi
-pip install -q yookassa
+apt -yqq install wget unzip build-essential python3-dev python3-pip 1> /dev/null
+echo "installing Flask..."
+pip install -q flask 1> /dev/null
+echo "installing uWSGI..."
+pip install -q uwsgi 1> /dev/null
+echo "installing yookassa..."
+pip install -q yookassa 1> /dev/null
 
 echo "downloading project from git..."
 cd /root
-wget 'https://github.com/kirovreporting/'${projectName}'/archive/refs/heads/main.zip'
-unzip main.zip
+wget 'https://github.com/kirovreporting/'${projectName}'/archive/refs/heads/main.zip' 1> /dev/null
+unzip main.zip 1> /dev/null
 mv ${projectName}-main ${projectName}
 cd ${projectName}
 
@@ -51,6 +55,7 @@ master = true
 processes = 5
 wsgi-file = /root/${projectName}/${projectName}.py
 chdir = /root/${projectname}/
+logto = /var/log/${projectname}.log
 socket = /tmp/${projectName}.sock
 chmod-socket = 660
 vacuum = true
@@ -68,6 +73,8 @@ module = wsgi:app
 master = true
 processes = 5
 wsgi-file = /root/${projectName}/${projectName}.py
+chdir = /root/${projectname}/
+logto = /var/log/${projectname}.log
 http-socket = ${ipAddress}:${listenPort}
 stats = ${ipAddress}:${statsPort}
 vacuum = true
