@@ -53,7 +53,6 @@ def paymentCreate():
     else:
         if request.args.get('token') != connectionToken:
             return '{"status":"error","message":"Invalid token"}'
-    initDatabase()
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
     cursor.execute("""INSERT INTO payments DEFAULT VALUES""")
