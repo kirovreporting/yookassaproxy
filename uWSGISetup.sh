@@ -11,19 +11,24 @@ read -p "Do you have reverse-proxy? y/n: " hasReverseProxy
 read -p "Enter yookassa account ID: " yookassaAccountID
 read -p "Enter yookassa secret key: " yookassaSecretKey
 read -p "Enter connection token: " connectionToken
+read -p "Enter domain name for your proxy (like this: my.proxydomain.com): " domainName
 
 if [[ ${hasReverseProxy} == "n" ]] 
 then
 read -p "Enter domain name for your proxy (like this: my.proxydomain.com): " domainName
 read -p "Enter email for certbot notifications: " certbotMail
+else
+read -p "IP address of your server: " ipAddress
+read -p "Which port do you want uWSGI to listen to: " listenPort
+read -p "Which port do you want uWSGI to show stats: " statsPort
 fi
 
 echo "installing binaries for unzipping, python and uWSGI..."
-apt -yq update
-apt -yq install wget build-essential python3-dev python3-pip 
-pip install flask
-pip install uwsgi
-pip install yookassa
+apt -yqq update
+apt -yqq install wget unzip build-essential python3-dev python3-pip 
+pip install -q flask
+pip install -q uwsgi
+pip install -q yookassa
 
 echo "downloading project from git..."
 cd /root
@@ -45,6 +50,7 @@ module = wsgi:app
 master = true
 processes = 5
 wsgi-file = /root/${projectName}/${projectName}.py
+chdir = /root/${projectname}/
 socket = /tmp/${projectName}.sock
 chmod-socket = 660
 vacuum = true
@@ -62,8 +68,8 @@ module = wsgi:app
 master = true
 processes = 5
 wsgi-file = /root/${projectName}/${projectName}.py
-http-socket = 127.0.0.1:3030
-stats = 127.0.0.1:3131
+http-socket = ${ipAddress}:${listenPort}
+stats = ${ipAddress}:${statsPort}
 vacuum = true
 
 die-on-term = true
