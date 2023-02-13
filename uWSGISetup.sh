@@ -20,13 +20,16 @@ fi
 
 echo "installing binaries for unzipping, python and uWSGI..."
 apt -yq update
-apt -yq install wget build-essential python3-dev python3-pip install uwsgi flask
+apt -yq install wget build-essential python3-dev python3-pip 
+pip install flask
+pip install uwsgi
+pip install yookassa
 
 echo "downloading project from git..."
 cd /root
-wget 'https://github.com/kirovreporting/'${projectName}'/archive/refs/heads/master.zip'
-unzip master.zip
-mv ${projectName}-master ${projectName}
+wget 'https://github.com/kirovreporting/'${projectName}'/archive/refs/heads/main.zip'
+unzip main.zip
+mv ${projectName}-main ${projectName}
 cd ${projectName}
 
 ################# UWSGI.INI #################
@@ -75,7 +78,8 @@ cat << EOF > config.json
 {
     "yookassaAccountID": "${yookassaAccountID}",
     "yookassaSecretKey": "${yookassaSecretKey}",
-    "connectionToken": "${connectionToken}"
+    "connectionToken": "${connectionToken}",
+    "domain": "${domainName}",
     "database": "db.sqlite",
     "debug": false
 }

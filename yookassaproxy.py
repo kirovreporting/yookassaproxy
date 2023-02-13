@@ -15,12 +15,14 @@ Configuration.secret_key = config['yookassaSecretKey']
 connectionToken = config['connectionToken']
 database = config['database']
 debug = config['debug']
+domain = config['domain']
+
 if debug:
-    domain = config['domain']
     port = config['port']
+    url = "http://"+domain+":"+str(port)+"/"
+else:
+    url = "http://"+domain+"/"
 
-
-url = "http://"+domain+":"+str(port)+"/"
 return_url = url + "backtalk"
 
 def initDatabase():
