@@ -5,7 +5,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-projectName = "yookassaproxy"
+projectName="yookassaproxy"
 
 read -p "Enter domain name for your proxy (like this: my.proxydomain.com): " domainName
 read -p "Enter email for certbot notifications: " certbotMail
@@ -20,7 +20,7 @@ apt -yq install wget build-essential python3-dev python3-pip install uwsgi flask
 
 echo "downloading project from git..."
 cd /root
-wget 'https://github.com/kirovreporting/$projectName/archive/refs/heads/master.zip'
+wget 'https://github.com/kirovreporting/'${projectName}'/archive/refs/heads/master.zip'
 unzip master.zip
 mv ${projectName}-master ${projectName}
 cd ${projectName}
@@ -28,6 +28,7 @@ cd ${projectName}
 ################# UWSGI.INI #################
 
 if [[ ${hasReverseProxy} == "y" ]]
+then
 
 echo "creating uWSGI config file..."
 cat << EOF > uwsgi.ini
@@ -44,7 +45,7 @@ vacuum = true
 die-on-term = true
 EOF
 
-elif
+else
 
 echo "creating uWSGI config file..."
 cat << EOF > uwsgi.ini
@@ -100,6 +101,7 @@ systemctl enable uwsgi
 #################  NGINX INSTALL #################
 
 if [[ ${hasReverseProxy} == "y" ]]
+then
 
 echo "installing nginx..."
 apt -yq install nginx
