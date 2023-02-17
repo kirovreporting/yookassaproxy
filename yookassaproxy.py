@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, Response
 from yookassa import Configuration, Payment
 import sqlite3
 import os.path
@@ -53,6 +53,7 @@ def paymentCreate():
     else:
         if request.args.get('token') != connectionToken:
             return '{"status":"error","message":"Invalid token"}'
+    initDatabase()
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
     cursor.execute("""INSERT INTO payments DEFAULT VALUES""")
@@ -74,10 +75,10 @@ def paymentCreate():
     except:
         return '{"status":"error","message":"Could not create payment"}'
     query = """UPDATE payments SET paymentID = ? WHERE id = ?;"""
-    cursor.execute(query, (str(payment.id), str(rowid)))
+    cursor.execute(query, (str(payment.id), str(rowid),))
     conn.commit()
     conn.close()
-    return '{"status":"ok","result":{"orderId":"'+str(payment.id)+'"}}'
+    return Response('{"status":"ok","result":{"orderId":"'+str(payment.id)+'"}}', mimetype='application/json')
 
 @app.route('/wp-json/avito/v1/checkDonationStatus')
 def paymentCheck():
@@ -93,11 +94,7 @@ def paymentCheck():
         payment = Payment.find_one(paymentID)
     except:
         return '{"status":"error","result":{"orderStatus":"not found"}}'
-    print(payment.status)
-    if payment.paid :
-        return '{"status":"ok","result":{"orderStatus":"succeeded"}}'
-    else:
-        return '{"status":"ok","result":{"orderStatus":"canceled"}}'
+    return Response('{"status":"ok","result":{"orderStatus":"'+str(payment.status)+'"}}', mimetype='application/json')
 
 @app.route('/kindness-badge')
 def paymentURL():
@@ -117,7 +114,7 @@ def paymentparse():
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
     query = """SELECT paymentID FROM payments WHERE id = ?"""
-    cursor.execute(query, (rowid))
+    cursor.execute(query, (rowid,))
     result = cursor.fetchall()
     conn.close()
     return redirect("https://www.avito.ru/kindness-badge?mode=checkDonationPage&orderId="+str(result[0][0]), code=302)
