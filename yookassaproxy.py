@@ -30,7 +30,8 @@ def initDatabase():
         schema = """
             CREATE TABLE payments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            paymentID TEXT
+            paymentID TEXT,
+            isWebView boolean DEFAULT false
             )
         """
         conn = sqlite3.connect(database)
@@ -74,8 +75,16 @@ def paymentCreate():
         }, uuid.uuid4())
     except:
         return '{"status":"error","message":"Could not create payment"}'
-    query = """UPDATE payments SET paymentID = ? WHERE id = ?;"""
-    cursor.execute(query, (str(payment.id), str(rowid),))
+    if 'isWebView' in request.args:
+        if request.args.get('isWebView') == "true":
+            query = """UPDATE payments SET paymentID = ?, isWebView = true WHERE id = ?;"""
+            cursor.execute(query, (str(payment.id), str(rowid),))
+        else:
+            query = """UPDATE payments SET paymentID = ? WHERE id = ?;"""
+            cursor.execute(query, (str(payment.id), str(rowid),))
+    else:
+        query = """UPDATE payments SET paymentID = ? WHERE id = ?;"""
+        cursor.execute(query, (str(payment.id), str(rowid),))
     conn.commit()
     conn.close()
     return Response('{"status":"ok","result":{"orderId":"'+str(payment.id)+'"}}', mimetype='application/json')
@@ -113,11 +122,14 @@ def paymentparse():
     rowid = request.args.get('id')
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
-    query = """SELECT paymentID FROM payments WHERE id = ?"""
+    query = """SELECT paymentID, isWebView FROM payments WHERE id = ?"""
     cursor.execute(query, (rowid,))
     result = cursor.fetchall()
     conn.close()
-    return redirect("https://www.avito.ru/kindness-badge?mode=checkDonationPage&orderId="+str(result[0][0]), code=302)
+    if result[0][1] == False:
+        return redirect("https://www.avito.ru/kindness-badge?mode=checkDonationPage&orderId="+str(result[0][0]), code=302)
+    else:
+        return redirect("ru.avito://1/webview?url=https%3A%2F%2Fwww.avito.ru%2Fkindness-badge%3Fmode%3DcheckDonationPage%26orderId%3D"+str(result[0][0])+"&mavAuth=true", code=302)
 
 application = app
 
