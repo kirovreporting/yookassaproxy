@@ -23,8 +23,6 @@ if debug:
 else:
     url = "https://"+domain+"/"
 
-return_url = url + "backtalk"
-
 def initDatabase():
     if not os.path.isfile(database):
         schema = """
@@ -54,39 +52,58 @@ def paymentCreate():
     else:
         if request.args.get('token') != connectionToken:
             return '{"status":"error","message":"Invalid token"}'
-    initDatabase()
-    conn = sqlite3.connect(database)
-    cursor = conn.cursor()
-    cursor.execute("""INSERT INTO payments DEFAULT VALUES""")
-    conn.commit()
-    rowid = cursor.lastrowid
-    try:
-        payment = Payment.create({
-            "amount": {
-                "value": amount,
-                "currency": "RUB"
-            },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": return_url+"?id="+str(rowid)
-            },
-            "capture": True,
-            "description": "Благотворительное пожертвование"
-        }, uuid.uuid4())
-    except:
-        return '{"status":"error","message":"Could not create payment"}'
-    if 'isWebView' in request.args:
-        if request.args.get('isWebView') == "true":
-            query = """UPDATE payments SET paymentID = ?, isWebView = true WHERE id = ?;"""
-            cursor.execute(query, (str(payment.id), str(rowid),))
+    if 'returnUrl' in request.args:
+        return_url = request.args.get('returnUrl')
+        try:
+            payment = Payment.create({
+                "amount": {
+                    "value": amount,
+                    "currency": "RUB"
+                },
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": return_url
+                },
+                "capture": True,
+                "description": "Благотворительное пожертвование"
+            }, uuid.uuid4())
+        except:
+            return '{"status":"error","message":"Could not create payment"}'
+    else:
+        return_url = url + "backtalk"
+        initDatabase()
+        conn = sqlite3.connect(database)
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO payments DEFAULT VALUES""")
+        conn.commit()
+        rowid = cursor.lastrowid
+        try:
+            payment = Payment.create({
+                "amount": {
+                    "value": amount,
+                    "currency": "RUB"
+                },
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": return_url+"?id="+str(rowid)
+                },
+                "capture": True,
+                "description": "Благотворительное пожертвование"
+            }, uuid.uuid4())
+        except:
+            return '{"status":"error","message":"Could not create payment"}'
+        if 'isWebView' in request.args:
+            if request.args.get('isWebView') == "true":
+                query = """UPDATE payments SET paymentID = ?, isWebView = true WHERE id = ?;"""
+                cursor.execute(query, (str(payment.id), str(rowid),))
+            else:
+                query = """UPDATE payments SET paymentID = ? WHERE id = ?;"""
+                cursor.execute(query, (str(payment.id), str(rowid),))
         else:
             query = """UPDATE payments SET paymentID = ? WHERE id = ?;"""
             cursor.execute(query, (str(payment.id), str(rowid),))
-    else:
-        query = """UPDATE payments SET paymentID = ? WHERE id = ?;"""
-        cursor.execute(query, (str(payment.id), str(rowid),))
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
     return Response('{"status":"ok","result":{"orderId":"'+str(payment.id)+'"}}', mimetype='application/json')
 
 @app.route('/wp-json/avito/v1/checkDonationStatus')
@@ -111,7 +128,6 @@ def paymentURL():
         return '{"status":"error","message":"Missed argument"}'
     paymentID = request.args.get('orderId')
     payment = Payment.find_one(paymentID)
-    #по какому коду перенаправляем?
     return redirect(payment.confirmation.confirmation_url, code=302)
 
 
