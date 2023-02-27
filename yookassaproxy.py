@@ -21,7 +21,7 @@ if debug:
     port = config['port']
     url = "http://"+domain+":"+str(port)+"/"
 else:
-    url = "http://"+domain+"/"
+    url = "https://"+domain+"/"
 
 return_url = url + "backtalk"
 
